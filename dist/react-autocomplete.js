@@ -1,10 +1,10 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("react"), require("react-dom"));
+		module.exports = factory(require("React"), require("ReactDOM"));
 	else if(typeof define === 'function' && define.amd)
-		define(["react", "react-dom"], factory);
+		define(["React", "ReactDOM"], factory);
 	else if(typeof exports === 'object')
-		exports["ReactAutocomplete"] = factory(require("react"), require("react-dom"));
+		exports["ReactAutocomplete"] = factory(require("React"), require("ReactDOM"));
 	else
 		root["ReactAutocomplete"] = factory(root["React"], root["ReactDOM"]);
 })(this, function(__WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_3__) {
@@ -91,6 +91,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: React.PropTypes.any,
 	    onChange: React.PropTypes.func,
 	    onSelect: React.PropTypes.func,
+	    selectOnTab: React.PropTypes.bool.isRequired,
 	    shouldItemRender: React.PropTypes.func,
 	    sortItems: React.PropTypes.func,
 	    getItemValue: React.PropTypes.func.isRequired,
@@ -115,10 +116,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      },
 	      inputProps: {},
 	      onChange: function onChange() {},
-	      onSelect: function onSelect(value, item) {},
+	      onSelect: function onSelect(value, item, selectionMethod) {},
 	      renderMenu: function renderMenu(items, value, style) {
 	        return React.createElement('div', { style: _extends({}, style, this.menuStyle), children: items });
 	      },
+	      selectOnTab: true,
 	      shouldItemRender: function shouldItemRender() {
 	        return true;
 	      },
@@ -236,38 +238,52 @@ return /******/ (function(modules) { // webpackBootstrap
 	    },
 	
 	    Enter: function Enter(event) {
-	      var _this = this;
-	
-	      if (this.state.isOpen === false) {
-	        // menu is closed so there is no selection to accept -> do nothing
-	        return;
-	      } else if (this.state.highlightedIndex == null) {
-	        // input has focus but no menu item is selected + enter is hit -> close the menu, highlight whatever's in input
-	        this.setState({
-	          isOpen: false
-	        }, function () {
-	          _this.refs.input.select();
-	        });
-	      } else {
-	        // text entered + menu item has been highlighted + enter is hit -> update value to that of selected menu item, close the menu
-	        event.preventDefault();
-	        var item = this.getFilteredItems()[this.state.highlightedIndex];
-	        var value = this.props.getItemValue(item);
-	        this.setState({
-	          isOpen: false,
-	          highlightedIndex: null
-	        }, function () {
-	          //this.refs.input.focus() // TODO: file issue
-	          _this.refs.input.setSelectionRange(value.length, value.length);
-	          _this.props.onSelect(value, item);
-	        });
-	      }
+	      this.handleKeyboardSelection(event);
 	    },
 	
 	    Escape: function Escape(event) {
 	      this.setState({
 	        highlightedIndex: null,
 	        isOpen: false
+	      });
+	    },
+	
+	    Tab: function Tab(event) {
+	      if (this.props.selectOnTab) {
+	        this.handleKeyboardSelection(event);
+	      }
+	    }
+	  },
+	
+	  handleKeyboardSelection: function handleKeyboardSelection(event) {
+	    var _this = this;
+	
+	    if (this.state.isOpen === false) {
+	      // menu is closed so there is no selection to accept -> do nothing
+	      return;
+	    } else if (this.state.highlightedIndex == null) {
+	      // input has focus but no menu item is selected + enter is hit -> close the menu, highlight whatever's in input
+	      this.setState({
+	        isOpen: false
+	      }, function () {
+	        _this.refs.input.select();
+	      });
+	    } else {
+	      // text entered + menu item has been highlighted + enter is hit -> update value to that of selected menu item, close the menu
+	      if (event.key === 'Enter') {
+	        // If enter was pressed, we want to prevent the default event handler from executing.
+	        // However, if tab was pressed, we *do* want the default handler to kick in.
+	        event.preventDefault();
+	      }
+	      var item = this.getFilteredItems()[this.state.highlightedIndex];
+	      var value = this.props.getItemValue(item);
+	      this.setState({
+	        isOpen: false,
+	        highlightedIndex: null
+	      }, function () {
+	        //this.refs.input.focus() // TODO: file issue
+	        _this.refs.input.setSelectionRange(value.length, value.length);
+	        _this.props.onSelect(value, item, event.key);
 	      });
 	    }
 	  },
@@ -330,7 +346,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      isOpen: false,
 	      highlightedIndex: null
 	    }, function () {
-	      _this3.props.onSelect(value, item);
+	      _this3.props.onSelect(value, item, 'click');
 	      _this3.refs.input.focus();
 	    });
 	  },

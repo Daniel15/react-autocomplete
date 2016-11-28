@@ -318,6 +318,54 @@ describe('Autocomplete kewDown->Enter event handlers', function () {
   });
 });
 
+describe('Autocomplete kewDown->Tab event handlers', function () {
+  it('should invoke `onSelect` with the selected menu item and close the menu', function () {
+    var autocompleteWrapper = (0, _enzyme.mount)(AutocompleteComponentJSX({}));
+    var autocompleteInputWrapper = autocompleteWrapper.find('input');
+
+    var value = 'Ar';
+    var defaultPrevented = false;
+    autocompleteWrapper.setState({ 'isOpen': true });
+    autocompleteInputWrapper.simulate('focus');
+    autocompleteWrapper.setProps({ value: value, onSelect: function onSelect(v) {
+        value = v;
+      } });
+
+    // simulate keyUp of last key, triggering autocomplete suggestion + selection of the suggestion in the menu
+    autocompleteInputWrapper.simulate('keyUp', { key: 'r', keyCode: 82, which: 82 });
+
+    // Hit tab, updating state.value with the selected Autocomplete suggestion
+    autocompleteInputWrapper.simulate('keyDown', { key: 'Tab', keyCode: 9, which: 9, preventDefault: function preventDefault() {
+        defaultPrevented = true;
+      } });
+    expect(value).toEqual('Arizona');
+    expect(autocompleteWrapper.state('isOpen')).toBe(false);
+    expect(defaultPrevented).toBe(false);
+  });
+
+  it('should not do anything if selectOnTab is false', function () {
+    var autocompleteWrapper = (0, _enzyme.mount)(AutocompleteComponentJSX({
+      selectOnTab: false
+    }));
+    var autocompleteInputWrapper = autocompleteWrapper.find('input');
+
+    var value = 'Ar';
+    autocompleteWrapper.setState({ 'isOpen': true });
+    autocompleteInputWrapper.simulate('focus');
+    autocompleteWrapper.setProps({ value: value, onSelect: function onSelect(v) {
+        value = v;
+      } });
+
+    // simulate keyUp of last key, triggering autocomplete suggestion + selection of the suggestion in the menu
+    autocompleteInputWrapper.simulate('keyUp', { key: 'r', keyCode: 82, which: 82 });
+
+    // Pressing tab should not change the state of the component
+    autocompleteInputWrapper.simulate('keyDown', { key: 'Tab', keyCode: 9, which: 9 });
+    expect(value).toEqual('Ar');
+    expect(autocompleteWrapper.state('isOpen')).toBe(true);
+  });
+});
+
 describe('Autocomplete kewDown->Escape event handlers', function () {
 
   var autocompleteWrapper = (0, _enzyme.mount)(AutocompleteComponentJSX({}));

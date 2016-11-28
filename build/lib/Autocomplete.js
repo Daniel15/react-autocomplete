@@ -19,6 +19,7 @@ var Autocomplete = React.createClass({
     value: React.PropTypes.any,
     onChange: React.PropTypes.func,
     onSelect: React.PropTypes.func,
+    selectOnTab: React.PropTypes.bool.isRequired,
     shouldItemRender: React.PropTypes.func,
     sortItems: React.PropTypes.func,
     getItemValue: React.PropTypes.func.isRequired,
@@ -43,10 +44,11 @@ var Autocomplete = React.createClass({
       },
       inputProps: {},
       onChange: function onChange() {},
-      onSelect: function onSelect(value, item) {},
+      onSelect: function onSelect(value, item, selectionMethod) {},
       renderMenu: function renderMenu(items, value, style) {
         return React.createElement('div', { style: _extends({}, style, this.menuStyle), children: items });
       },
+      selectOnTab: true,
       shouldItemRender: function shouldItemRender() {
         return true;
       },
@@ -164,38 +166,52 @@ var Autocomplete = React.createClass({
     },
 
     Enter: function Enter(event) {
-      var _this = this;
-
-      if (this.state.isOpen === false) {
-        // menu is closed so there is no selection to accept -> do nothing
-        return;
-      } else if (this.state.highlightedIndex == null) {
-        // input has focus but no menu item is selected + enter is hit -> close the menu, highlight whatever's in input
-        this.setState({
-          isOpen: false
-        }, function () {
-          _this.refs.input.select();
-        });
-      } else {
-        // text entered + menu item has been highlighted + enter is hit -> update value to that of selected menu item, close the menu
-        event.preventDefault();
-        var item = this.getFilteredItems()[this.state.highlightedIndex];
-        var value = this.props.getItemValue(item);
-        this.setState({
-          isOpen: false,
-          highlightedIndex: null
-        }, function () {
-          //this.refs.input.focus() // TODO: file issue
-          _this.refs.input.setSelectionRange(value.length, value.length);
-          _this.props.onSelect(value, item);
-        });
-      }
+      this.handleKeyboardSelection(event);
     },
 
     Escape: function Escape(event) {
       this.setState({
         highlightedIndex: null,
         isOpen: false
+      });
+    },
+
+    Tab: function Tab(event) {
+      if (this.props.selectOnTab) {
+        this.handleKeyboardSelection(event);
+      }
+    }
+  },
+
+  handleKeyboardSelection: function handleKeyboardSelection(event) {
+    var _this = this;
+
+    if (this.state.isOpen === false) {
+      // menu is closed so there is no selection to accept -> do nothing
+      return;
+    } else if (this.state.highlightedIndex == null) {
+      // input has focus but no menu item is selected + enter is hit -> close the menu, highlight whatever's in input
+      this.setState({
+        isOpen: false
+      }, function () {
+        _this.refs.input.select();
+      });
+    } else {
+      // text entered + menu item has been highlighted + enter is hit -> update value to that of selected menu item, close the menu
+      if (event.key === 'Enter') {
+        // If enter was pressed, we want to prevent the default event handler from executing.
+        // However, if tab was pressed, we *do* want the default handler to kick in.
+        event.preventDefault();
+      }
+      var item = this.getFilteredItems()[this.state.highlightedIndex];
+      var value = this.props.getItemValue(item);
+      this.setState({
+        isOpen: false,
+        highlightedIndex: null
+      }, function () {
+        //this.refs.input.focus() // TODO: file issue
+        _this.refs.input.setSelectionRange(value.length, value.length);
+        _this.props.onSelect(value, item, event.key);
       });
     }
   },
@@ -258,7 +274,7 @@ var Autocomplete = React.createClass({
       isOpen: false,
       highlightedIndex: null
     }, function () {
-      _this3.props.onSelect(value, item);
+      _this3.props.onSelect(value, item, 'click');
       _this3.refs.input.focus();
     });
   },
