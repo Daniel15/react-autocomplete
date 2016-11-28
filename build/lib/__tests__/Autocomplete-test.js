@@ -297,13 +297,11 @@ describe('Autocomplete kewDown->Enter event handlers', function () {
   });
 
   it('should invoke `onSelect` with the selected menu item and close the menu', function () {
-    var value = 'Ar';
+    var onSelect = jest.fn();
     var defaultPrevented = false;
     autocompleteWrapper.setState({ 'isOpen': true });
     autocompleteInputWrapper.simulate('focus');
-    autocompleteWrapper.setProps({ value: value, onSelect: function onSelect(v) {
-        value = v;
-      } });
+    autocompleteWrapper.setProps({ value: 'Ar', onSelect: onSelect });
 
     // simulate keyUp of last key, triggering autocomplete suggestion + selection of the suggestion in the menu
     autocompleteInputWrapper.simulate('keyUp', { key: 'r', keyCode: 82, which: 82 });
@@ -312,7 +310,7 @@ describe('Autocomplete kewDown->Enter event handlers', function () {
     autocompleteInputWrapper.simulate('keyDown', { key: 'Enter', keyCode: 13, which: 13, preventDefault: function preventDefault() {
         defaultPrevented = true;
       } });
-    expect(value).toEqual('Arizona');
+    expect(onSelect).toBeCalledWith('Arizona', { abbr: 'AZ', name: 'Arizona' }, 'Enter');
     expect(autocompleteWrapper.state('isOpen')).toBe(false);
     expect(defaultPrevented).toBe(true);
   });
@@ -320,16 +318,14 @@ describe('Autocomplete kewDown->Enter event handlers', function () {
 
 describe('Autocomplete kewDown->Tab event handlers', function () {
   it('should invoke `onSelect` with the selected menu item and close the menu', function () {
+    var onSelect = jest.fn();
     var autocompleteWrapper = (0, _enzyme.mount)(AutocompleteComponentJSX({}));
     var autocompleteInputWrapper = autocompleteWrapper.find('input');
 
-    var value = 'Ar';
     var defaultPrevented = false;
     autocompleteWrapper.setState({ 'isOpen': true });
     autocompleteInputWrapper.simulate('focus');
-    autocompleteWrapper.setProps({ value: value, onSelect: function onSelect(v) {
-        value = v;
-      } });
+    autocompleteWrapper.setProps({ value: 'Ar', onSelect: onSelect });
 
     // simulate keyUp of last key, triggering autocomplete suggestion + selection of the suggestion in the menu
     autocompleteInputWrapper.simulate('keyUp', { key: 'r', keyCode: 82, which: 82 });
@@ -338,30 +334,29 @@ describe('Autocomplete kewDown->Tab event handlers', function () {
     autocompleteInputWrapper.simulate('keyDown', { key: 'Tab', keyCode: 9, which: 9, preventDefault: function preventDefault() {
         defaultPrevented = true;
       } });
-    expect(value).toEqual('Arizona');
+
+    expect(onSelect).toBeCalledWith('Arizona', { abbr: 'AZ', name: 'Arizona' }, 'Tab');
     expect(autocompleteWrapper.state('isOpen')).toBe(false);
     expect(defaultPrevented).toBe(false);
   });
 
   it('should not do anything if selectOnTab is false', function () {
+    var onSelect = jest.fn();
     var autocompleteWrapper = (0, _enzyme.mount)(AutocompleteComponentJSX({
       selectOnTab: false
     }));
     var autocompleteInputWrapper = autocompleteWrapper.find('input');
 
-    var value = 'Ar';
     autocompleteWrapper.setState({ 'isOpen': true });
     autocompleteInputWrapper.simulate('focus');
-    autocompleteWrapper.setProps({ value: value, onSelect: function onSelect(v) {
-        value = v;
-      } });
+    autocompleteWrapper.setProps({ value: 'Ar', onSelect: onSelect });
 
     // simulate keyUp of last key, triggering autocomplete suggestion + selection of the suggestion in the menu
     autocompleteInputWrapper.simulate('keyUp', { key: 'r', keyCode: 82, which: 82 });
 
     // Pressing tab should not change the state of the component
     autocompleteInputWrapper.simulate('keyDown', { key: 'Tab', keyCode: 9, which: 9 });
-    expect(value).toEqual('Ar');
+    expect(onSelect).not.toBeCalled();
     expect(autocompleteWrapper.state('isOpen')).toBe(true);
   });
 });
@@ -388,22 +383,17 @@ describe('Autocomplete click event handlers', function () {
   var autocompleteInputWrapper = autocompleteWrapper.find('input');
 
   it('should update input value from selected menu item and close the menu', function () {
-    var value = 'Ar';
-    autocompleteWrapper.setProps({
-      value: value,
-      onSelect: function onSelect(v) {
-        value = v;
-      }
-    });
+    var onSelect = jest.fn();
+    autocompleteWrapper.setProps({ value: 'Ar', onSelect: onSelect });
     autocompleteWrapper.setState({ isOpen: true });
-    autocompleteInputWrapper.simulate('change', { target: { value: value } });
+    autocompleteInputWrapper.simulate('change', { target: { value: 'Ar' } });
 
     // simulate keyUp of last key, triggering autocomplete suggestion + selection of the suggestion in the menu
     autocompleteInputWrapper.simulate('keyUp', { key: 'r', keyCode: 82, which: 82 });
 
     // Click inside input, updating state.value with the selected Autocomplete suggestion
     autocompleteInputWrapper.simulate('click');
-    expect(value).toEqual('Arizona');
+    expect(onSelect).toBeCalledWith('Arizona', { abbr: 'AZ', name: 'Arizona' }, 'click');
     expect(autocompleteWrapper.state('isOpen')).toBe(false);
   });
 });

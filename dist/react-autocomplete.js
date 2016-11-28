@@ -258,6 +258,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  handleKeyboardSelection: function handleKeyboardSelection(event) {
 	    var _this = this;
 	
+	    var key = event.key;
 	    if (this.state.isOpen === false) {
 	      // menu is closed so there is no selection to accept -> do nothing
 	      return;
@@ -270,7 +271,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      });
 	    } else {
 	      // text entered + menu item has been highlighted + enter is hit -> update value to that of selected menu item, close the menu
-	      if (event.key === 'Enter') {
+	      if (key === 'Enter') {
 	        // If enter was pressed, we want to prevent the default event handler from executing.
 	        // However, if tab was pressed, we *do* want the default handler to kick in.
 	        event.preventDefault();
@@ -283,7 +284,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }, function () {
 	        //this.refs.input.focus() // TODO: file issue
 	        _this.refs.input.setSelectionRange(value.length, value.length);
-	        _this.props.onSelect(value, item, event.key);
+	        _this.props.onSelect(value, item, key);
 	      });
 	    }
 	  },
